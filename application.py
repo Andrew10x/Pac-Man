@@ -1,4 +1,5 @@
 from settings import *
+from player import *
 import pygame
 import sys
 
@@ -14,6 +15,7 @@ class Application:
         self.state = 'start'
         self.cell_width = maze_width//28
         self.cell_height = maze_height//30
+        self.player = Player(self, pl_start_pos)
         self.load()
         
     def run(self):
@@ -78,9 +80,18 @@ class Application:
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
                 self.running = False
+            if ev.type == pygame.KEYDOWN:
+                if ev.key == pygame.K_LEFT:
+                    self.player.move(vect(-1, 0))
+                if ev.key == pygame.K_RIGHT:
+                    self.player.move(vect(1, 0))
+                if ev.key == pygame.K_UP:
+                    self.player.move(vect(0, -1))
+                if ev.key == pygame.K_DOWN:
+                    self.player.move(vect(0, 1))
 
     def playing_update(self):
-        pass
+        self.player.update()
 
     def playing_draw(self):
         self.screen.fill((0, 0, 0))
@@ -88,6 +99,7 @@ class Application:
         self.draw_grid()
         self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'current score: 0', [25, 0])
         self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'high score: 0', [width//2, 0])
+        self.player.draw()
         pygame.display.update()
 
 
