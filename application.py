@@ -16,6 +16,7 @@ class Application:
         self.cell_width = maze_width//28
         self.cell_height = maze_height//30
         self.player = Player(self, pl_start_pos)
+        self.walls = []
         self.load()
         
     def run(self):
@@ -38,6 +39,13 @@ class Application:
         self.background = pygame.image.load('maze.png')
         self.background = pygame.transform.scale(self.background, (maze_width, maze_height))   ##
 
+        with open('maze.txt', 'r') as file:
+            for yidx, line in enumerate(file):
+                for xidx, char in enumerate(line):
+                    if char == '1':
+                        self.walls.append(vect(xidx, yidx))
+        print(self.walls)
+
     def draw_text(self, screen, size, color, name, text, pos, centered=False):
         font = pygame.font.SysFont(name, size)
         my_text = font.render(text, False, color)
@@ -49,10 +57,16 @@ class Application:
 
     def draw_grid(self):
         for x in range(maze_width // self.cell_width):
-            pygame.draw.line(self.background, (105, 105, 105), (x*self.cell_width, 0), (x*self.cell_width, maze_height))
+            pygame.draw.line(self.background, (105, 105, 105), (x*self.cell_width, 0), (x*self.cell_width,
+                                                                                        maze_height))
 
         for x in range(maze_height // self.cell_height):
-            pygame.draw.line(self.background, (105, 105, 105), (0, x*self.cell_height), (maze_width, x*self.cell_height))
+            pygame.draw.line(self.background, (105, 105, 105), (0, x*self.cell_height), (maze_width,
+                                                                                         x*self.cell_height))
+
+        for wall in self.walls:
+            pygame.draw.rect(self.background, (155, 211, 154), (wall.x*self.cell_width, wall.y*self.cell_height,
+                                                               self.cell_width, self.cell_height))
 
     def start_events(self):
         for ev in pygame.event.get():

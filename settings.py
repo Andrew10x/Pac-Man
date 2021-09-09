@@ -11,4 +11,4 @@ font_name = 'Arial Black'
 fps = 60
 side = 50
 
-pl_start_pos = vect(6, 2)
+pl_start_pos = vect(1, 1)
