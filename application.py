@@ -17,6 +17,7 @@ class Application:
         self.cell_height = maze_height//30
         self.player = Player(self, pl_start_pos)
         self.walls = []
+        self.coins = []
         self.load()
         
     def run(self):
@@ -44,6 +45,8 @@ class Application:
                 for xidx, char in enumerate(line):
                     if char == '1':
                         self.walls.append(vect(xidx, yidx))
+                    elif char == 'c':
+                        self.coins.append(vect(xidx, yidx))
         print(self.walls)
 
     def draw_text(self, screen, size, color, name, text, pos, centered=False):
@@ -64,9 +67,9 @@ class Application:
             pygame.draw.line(self.background, (105, 105, 105), (0, x*self.cell_height), (maze_width,
                                                                                          x*self.cell_height))
 
-        for wall in self.walls:
-            pygame.draw.rect(self.background, (155, 211, 154), (wall.x*self.cell_width, wall.y*self.cell_height,
-                                                               self.cell_width, self.cell_height))
+        # for coin in self.coins:
+        #    pygame.draw.rect(self.background, (177, 165, 84), (coin.x*self.cell_width, coin.y*self.cell_height,
+        #                                                       self.cell_width, self.cell_height))
 
     def start_events(self):
         for ev in pygame.event.get():
@@ -110,13 +113,18 @@ class Application:
     def playing_draw(self):
         self.screen.fill((0, 0, 0))
         self.screen.blit(self.background, (25, 25))
+        self.draw_coins()
         self.draw_grid()
-        self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'current score: 0', [25, 0])
+        self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'current score: {}'
+                       .format(self.player.current_score), [25, 0])
         self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'high score: 0', [width//2, 0])
         self.player.draw()
         pygame.display.update()
 
-
+    def draw_coins(self):
+        for coin in self.coins:
+            pygame.draw.circle(self.screen, (212, 183, 41), (coin.x*self.cell_width + self.cell_width//2 + side//2,
+                                                             coin.y*self.cell_height + self.cell_height//2 + side//2), 5)
 
 
 
