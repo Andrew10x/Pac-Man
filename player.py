@@ -1,7 +1,7 @@
 import pygame
 from settings import *
 
-vec = pygame.math.Vector2
+# vect = pygame.math.Vector2
 
 
 class Player:
@@ -10,7 +10,7 @@ class Player:
         self.starting_pos = [pos.x, pos.y]
         self.grid_pos = pos
         self.pix_pos = self.get_pix_pos()
-        self.direction = vec(1, 0)
+        self.direction = vect(1, 0)
         self.stored_direction = None
         self.able_to_move = True
         self.current_score = 0
@@ -37,7 +37,8 @@ class Player:
 
     def on_coin(self):
         if self.grid_pos in self.app.coins:
-            return True
+            if self.time_to_move():
+                return True
         else:
             return False
 
@@ -49,20 +50,20 @@ class Player:
         self.stored_direction = direction
 
     def get_pix_pos(self):
-        return vec((self.grid_pos[0] * self.app.cell_width) + side // 2 + self.app.cell_width // 2,
+        return vect((self.grid_pos[0] * self.app.cell_width) + side // 2 + self.app.cell_width // 2,
                    (self.grid_pos[1] * self.app.cell_height) +
                    side // 2 + self.app.cell_height // 2)
 
     def time_to_move(self):
         if int(self.pix_pos.x + side // 2) % self.app.cell_width == 0:
-            if self.direction == vec(1, 0) or self.direction == vec(-1, 0) or self.direction == vec(0, 0):
+            if self.direction == vect(1, 0) or self.direction == vect(-1, 0) or self.direction == vect(0, 0):
                 return True
         if int(self.pix_pos.y + side // 2) % self.app.cell_height == 0:
-            if self.direction == vec(0, 1) or self.direction == vec(0, -1) or self.direction == vec(0, 0):
+            if self.direction == vect(0, 1) or self.direction == vect(0, -1) or self.direction == vect(0, 0):
                 return True
 
     def can_move(self):
         for wall in self.app.walls:
-            if vec(self.grid_pos + self.direction) == wall:
+            if vect(self.grid_pos + self.direction) == wall:
                 return False
         return True

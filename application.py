@@ -1,5 +1,6 @@
 from settings import *
 from player import *
+from enemy import *
 import pygame
 import sys
 
@@ -15,11 +16,14 @@ class Application:
         self.state = 'start'
         self.cell_width = maze_width//28
         self.cell_height = maze_height//30
-        self.player = Player(self, pl_start_pos)
         self.walls = []
         self.coins = []
+        self.enemies = []
+        self.e_pos = []
         self.load()
-        
+        self.player = Player(self, pl_start_pos)  
+        self.make_enemies()
+
     def run(self):
         while self.running:
             if self.state == 'start':
@@ -47,6 +51,14 @@ class Application:
                         self.walls.append(vect(xidx, yidx))
                     elif char == 'c':
                         self.coins.append(vect(xidx, yidx))
+                    elif char == 'p':
+                        pl_start_pos = vect(xidx, yidx)
+                    elif char in ['2', '3', '4', '5']:
+                        self.e_pos.append(vect(xidx, yidx))
+                    elif char == 'b':
+                        pygame.draw.rect(self.background, (0, 0, 0, 0), (xidx*self.cell_width,
+                                                                         yidx*self.cell_height,
+                                                                         self.cell_width, self.cell_height))
         print(self.walls)
 
     def draw_text(self, screen, size, color, name, text, pos, centered=False):
@@ -70,6 +82,11 @@ class Application:
         # for coin in self.coins:
         #    pygame.draw.rect(self.background, (177, 165, 84), (coin.x*self.cell_width, coin.y*self.cell_height,
         #                                                       self.cell_width, self.cell_height))
+
+    def make_enemies(self):
+        for idx, pos in enumerate(self.e_pos):
+            self.enemies.append(Enemy(self, pos, idx))
+            print(idx)
 
     def start_events(self):
         for ev in pygame.event.get():
@@ -109,6 +126,8 @@ class Application:
 
     def playing_update(self):
         self.player.update()
+        for enemy in self.enemies:
+            enemy.update()
 
     def playing_draw(self):
         self.screen.fill((0, 0, 0))
@@ -119,6 +138,8 @@ class Application:
                        .format(self.player.current_score), [25, 0])
         self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'high score: 0', [width//2, 0])
         self.player.draw()
+        for enemy in self.enemies:
+            enemy.draw()
         pygame.display.update()
 
     def draw_coins(self):
