@@ -15,6 +15,7 @@ class Enemy:
         self.direction = vect(0, 0)
         self.personality = self.set_personality()
         self.target = None
+        self.starting_pos = [pos.x, pos.y]
         self.speed = self.set_speed()
 
     def update(self):

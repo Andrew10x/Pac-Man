@@ -37,6 +37,10 @@ class Application:
                 self.playing_events()
                 self.playing_update()
                 self.playing_draw()
+            elif self.state == 'game over':
+                self.game_over_events()
+                self.game_over_update()
+                self.game_over_draw()
             else:
                 self.running = False
             self.clock.tick(fps)
@@ -92,6 +96,26 @@ class Application:
             self.enemies.append(Enemy(self, pos, idx))
             print(idx)
 
+    def reset(self):
+        self.player.lives = 3
+        self.player.current_score = 0
+        self.coins = []
+        self.player.grid_pos = vect(self.player.starting_pos)
+        self.player.pix_pos = self.player.get_pix_pos()
+        self.player.direction *= 0
+
+        for enemy in self.enemies:
+            enemy.grid_pos = vect(enemy.starting_pos)
+            enemy.pix_pos = enemy.get_pix_pos()
+            enemy.direction *= 0
+
+        with open('maze.txt', 'r') as file:
+            for yidx, line in enumerate(file):
+                for xidx, char in enumerate(line):
+                    if char == 'c':
+                        self.coins.append(vect(xidx, yidx))
+        self.state = 'playing'
+        
     def start_events(self):
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
@@ -157,9 +181,31 @@ class Application:
         else:
             self.player.grid_pos = vect(self.p_pos)
             self.player.pix_pos = self.player.get_pix_pos()
+            self.player.direction *= 0
+            for enemy in self.enemies:
+                enemy.grid_pos = vect(enemy.starting_pos)
+                enemy.pix_pos = enemy.get_pix_pos()
+                enemy.direction *= 0
 
     def draw_coins(self):
         for coin in self.coins:
             pygame.draw.circle(self.screen, (212, 183, 41),
                                (coin.x * self.cell_width + self.cell_width // 2 + side // 2,
                                 coin.y * self.cell_height + self.cell_height // 2 + side // 2), 5)
+
+    def game_over_events(self):
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                self.running = False
+            if ev.type == pygame.KEYDOWN and ev.key == pygame.K_SPACE:
+                self.reset()
+
+    def game_over_update(self):
+        pass
+
+    def game_over_draw(self):
+        self.screen.fill((0, 0, 0))
+        again_text = "Press SPACE bar to PLAY AGAIN"
+        self.draw_text(self.screen, 52, (255, 10, 15), "arial", "GAME OVER", [width//2, 100], True)
+        self.draw_text(self.screen, 36, (203, 203, 175), "arial", again_text, [width//2, height//2], True)
+        pygame.display.update()
