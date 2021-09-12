@@ -8,7 +8,9 @@ maze_height = 620
 
 start_text_size = 18
 font_name = 'Arial Black'
-fps = 60
+fps = 40
 side = 50
+cols = 28
+rows = 30
 
 pl_start_pos = vect(1, 1)
