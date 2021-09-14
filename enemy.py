@@ -17,6 +17,7 @@ class Enemy:
         self.target = None
         self.starting_pos = [pos.x, pos.y]
         self.speed = self.set_speed()
+        self.image = self.load_img()
 
     def update(self):
 
@@ -46,7 +47,8 @@ class Enemy:
                 return vect(cols-2, rows-2)
 
     def draw(self):
-        pygame.draw.circle(self.app.screen, self.color, self.pix_pos, self.radius)
+        #pygame.draw.circle(self.app.screen, self.color, self.pix_pos, self.radius)
+        self.app.screen.blit(self.image, (self.pix_pos.x - 12, self.pix_pos.y - 12))
 
     def set_speed(self):
         if self.personality == 'speedy':
@@ -157,3 +159,13 @@ class Enemy:
             return "random"
         elif self.number == 3:
             return "scared"
+
+    def load_img(self):
+        if self.number == 0:
+            return pygame.transform.scale(pygame.image.load('img/Blinky.png'), (24, 24))
+        elif self.number == 1:
+            return pygame.transform.scale(pygame.image.load('img/Inky.png'), (24, 24))
+        elif self.number == 2:
+            return pygame.transform.scale(pygame.image.load('img/Pinky.png'), (24, 24))
+        elif self.number == 3:
+            return pygame.transform.scale(pygame.image.load('img/Clyde.png'), (24, 24))

@@ -23,6 +23,7 @@ class Application:
         self.enemies = []
         self.e_pos = []
         self.p_pos = vect(1, 1)
+        self.wall_img = None
         self.load()
         self.player = Player(self, vect(pl_start_pos))
         self.make_enemies()
@@ -48,8 +49,9 @@ class Application:
         sys.exit()
 
     def load(self):
-        self.background = pygame.image.load('maze.png')
+        self.background = pygame.image.load('img/black1.jpg')
         self.background = pygame.transform.scale(self.background, (maze_width, maze_height))  ##
+        self.wall_img = pygame.transform.scale(pygame.image.load('img/wall.png'), (self.cell_width, self.cell_height))
 
         with open('maze.txt', 'r') as file:
             for yidx, line in enumerate(file):
@@ -88,7 +90,14 @@ class Application:
 
         # for coin in self.coins:
         #    pygame.draw.rect(self.background, (177, 165, 84), (coin.x*self.cell_width, coin.y*self.cell_height,
+        #
         #                                                       self.cell_width, self.cell_height))
+        for wall in self.walls:
+            self.screen.blit(self.wall_img, (
+            wall.x * self.cell_width + self.cell_width + 4, wall.y * self.cell_height + self.cell_height+4))
+            pygame.draw.rect(self.background, (177, 165, 84), (wall.x * self.cell_width, wall.y * self.cell_height,
+                                                               self.cell_width, self.cell_height))
+
         pass
 
     def make_enemies(self):
@@ -115,7 +124,7 @@ class Application:
                     if char == 'c':
                         self.coins.append(vect(xidx, yidx))
         self.state = 'playing'
-        
+
     def start_events(self):
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
@@ -130,12 +139,10 @@ class Application:
         self.screen.fill((0, 0, 0))
         text1 = 'Push space bar'
         text2 = 'One player only'
-        text3 = 'high score'
         pos_tx = maze_width // 2
         pos_ty = maze_height // 2
-        self.draw_text(self.screen, start_text_size, (185, 134, 27), font_name, text1, [pos_tx, pos_ty], True)
-        self.draw_text(self.screen, start_text_size, (51, 153, 153), font_name, text2, [pos_tx, pos_ty + 50], True)
-        self.draw_text(self.screen, start_text_size, (242, 243, 222), font_name, text3, [5, 3])
+        self.draw_text(self.screen, start_text_size+8, (185, 134, 27), font_name, text1, [pos_tx, pos_ty - 20], True)
+        self.draw_text(self.screen, start_text_size+8, (51, 153, 153), font_name, text2, [pos_tx, pos_ty + 50], True)
         pygame.display.update()
 
     def playing_events(self):
@@ -168,7 +175,7 @@ class Application:
         self.draw_grid()
         self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'current score: {}'
                        .format(self.player.current_score), [25, 0])
-        self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'high score: 0', [width // 2, 0])
+        self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'Pac-Man', [width*3 // 5, 0])
         self.player.draw()
         for enemy in self.enemies:
             enemy.draw()
@@ -206,6 +213,6 @@ class Application:
     def game_over_draw(self):
         self.screen.fill((0, 0, 0))
         again_text = "Press SPACE bar to PLAY AGAIN"
-        self.draw_text(self.screen, 52, (255, 10, 15), "arial", "GAME OVER", [width//2, 100], True)
-        self.draw_text(self.screen, 36, (203, 203, 175), "arial", again_text, [width//2, height//2], True)
+        self.draw_text(self.screen, 52, (255, 10, 15), "arial", "GAME OVER", [width // 2, 100], True)
+        self.draw_text(self.screen, 36, (203, 203, 175), "arial", again_text, [width // 2, height // 2], True)
         pygame.display.update()
