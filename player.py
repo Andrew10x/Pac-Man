@@ -72,9 +72,6 @@ class Player:
             self.app.screen.blit(self.walk_down[self.anim_count // 14], pac_pos)
         else:
             self.app.screen.blit(self.walk_right[self.anim_count // 14], pac_pos)
-        #else:
-        #    pygame.draw.circle(self.app.screen, (230, 250, 70), (int(self.pix_pos.x - self.app.cell_width//2),
-        #                                                     int(self.pix_pos.y - self.app.cell_height//2)), self.app.cell_width // 2 - 2)
         for x in range(self.lives):
             pygame.draw.circle(self.app.screen, (230, 250, 70), (30 + x * 17, height - 15), 7)
 

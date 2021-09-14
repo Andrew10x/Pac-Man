@@ -1,5 +1,3 @@
-import copy
-
 from settings import *
 from player import *
 from enemy import *
@@ -68,7 +66,6 @@ class Application:
                         pygame.draw.rect(self.background, (0, 0, 0, 0), (xidx * self.cell_width,
                                                                          yidx * self.cell_height,
                                                                          self.cell_width, self.cell_height))
-        print(self.walls)
 
     def draw_text(self, screen, size, color, name, text, pos, centered=False):
         font = pygame.font.SysFont(name, size)
@@ -80,25 +77,11 @@ class Application:
         screen.blit(my_text, pos)
 
     def draw_grid(self):
-        # for x in range(maze_width // self.cell_width):
-        #     pygame.draw.line(self.background, (105, 105, 105), (x*self.cell_width, 0), (x*self.cell_width,
-        #                                                                                 maze_height))
-        #
-        # for x in range(maze_height // self.cell_height):
-        #     pygame.draw.line(self.background, (105, 105, 105), (0, x*self.cell_height), (maze_width,
-        #                                                                                  x*self.cell_height))
-
-        # for coin in self.coins:
-        #    pygame.draw.rect(self.background, (177, 165, 84), (coin.x*self.cell_width, coin.y*self.cell_height,
-        #
-        #                                                       self.cell_width, self.cell_height))
         for wall in self.walls:
             self.screen.blit(self.wall_img, (
-            wall.x * self.cell_width + self.cell_width + 4, wall.y * self.cell_height + self.cell_height+4))
+                wall.x * self.cell_width + self.cell_width + 4, wall.y * self.cell_height + self.cell_height + 4))
             pygame.draw.rect(self.background, (177, 165, 84), (wall.x * self.cell_width, wall.y * self.cell_height,
                                                                self.cell_width, self.cell_height))
-
-        pass
 
     def make_enemies(self):
         for idx, pos in enumerate(self.e_pos):
@@ -141,8 +124,8 @@ class Application:
         text2 = 'One player only'
         pos_tx = maze_width // 2
         pos_ty = maze_height // 2
-        self.draw_text(self.screen, start_text_size+8, (185, 134, 27), font_name, text1, [pos_tx, pos_ty - 20], True)
-        self.draw_text(self.screen, start_text_size+8, (51, 153, 153), font_name, text2, [pos_tx, pos_ty + 50], True)
+        self.draw_text(self.screen, start_text_size + 8, (185, 134, 27), font_name, text1, [pos_tx, pos_ty - 20], True)
+        self.draw_text(self.screen, start_text_size + 8, (51, 153, 153), font_name, text2, [pos_tx, pos_ty + 50], True)
         pygame.display.update()
 
     def playing_events(self):
@@ -175,7 +158,7 @@ class Application:
         self.draw_grid()
         self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'current score: {}'
                        .format(self.player.current_score), [25, 0])
-        self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'Pac-Man', [width*3 // 5, 0])
+        self.draw_text(self.screen, start_text_size, (255, 255, 255), font_name, 'Pac-Man', [width * 3 // 5, 0])
         self.player.draw()
         for enemy in self.enemies:
             enemy.draw()
