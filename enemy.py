@@ -2,6 +2,7 @@ import pygame
 import random
 from settings import *
 
+
 # vect = pygame.math.Vector2
 
 class Enemy:
@@ -9,12 +10,13 @@ class Enemy:
         self.app = app
         self.grid_pos = pos
         self.pix_pos = self.get_pix_pos()
-        self.radius = self.app.cell_width//2.4
+        self.radius = self.app.cell_width // 2.4
         self.number = number
         self.color = self.set_color()
         self.direction = vect(0, 0)
         self.personality = self.set_personality()
         self.target = None
+        self.shortest = []
         self.starting_pos = [pos.x, pos.y]
         self.speed = self.set_speed()
         self.image = self.load_img()
@@ -24,7 +26,7 @@ class Enemy:
         self.target = self.set_target()
         if self.target != self.grid_pos:
             if self.direction:
-                self.pix_pos = self.pix_pos + self.direction*self.speed
+                self.pix_pos = self.pix_pos + self.direction * self.speed
             if self.time_to_move():
                 self.move()
 
@@ -40,20 +42,31 @@ class Enemy:
             if self.app.player.grid_pos.x > cols // 2 and self.app.player.grid_pos.y > rows // 2:
                 return vect(1, 1)
             if self.app.player.grid_pos.x > cols // 2 and self.app.player.grid_pos.y < rows // 2:
-                return vect(1, rows-3)
+                return vect(1, rows - 3)
             if self.app.player.grid_pos.x < cols // 2 and self.app.player.grid_pos.y > rows // 2:
-                return vect(cols-3, 1)
+                return vect(cols - 3, 1)
             else:
-                return vect(cols-3, rows-3)
+                return vect(cols - 3, rows - 3)
 
     def draw(self):
         #pygame.draw.circle(self.app.screen, self.color, self.pix_pos, self.radius)
         self.app.screen.blit(self.image, (self.pix_pos.x - 12, self.pix_pos.y - 12))
 
+        for cell in self.shortest:
+           if cell != self.shortest[0] and cell != self.shortest[len(self.shortest) - 1]:
+            pygame.draw.rect(self.app.screen,  self.color,
+                             (self.get_pix_pos2(cell).x - self.app.cell_width//2,  self.get_pix_pos2(cell).y - self.app.cell_height//2,
+                              self.app.cell_width, self.app.cell_height), 1)
+        #if self.shortest:
+        #    pygame.draw.rect(self.app.background, (177, 165, 84),
+        #                     (self.shortest[0][0] * self.app.cell_width, self.shortest[0][1] * self.app.cell_height,
+        #                     self.app.cell_width, self.app.cell_height), 1)
+
     def set_speed(self):
         if self.personality == 'speedy':
             speed = 2
-        else: speed = 1
+        else:
+            speed = 1
         return speed
 
     def time_to_move(self):
@@ -73,16 +86,25 @@ class Enemy:
             #self.direction = self.get_random_dir()
         elif self.personality == 'speedy':
             self.direction = self.get_path_dir(self.target)
-            #self.direction = self.get_random_dir()
+            # self.direction = self.get_random_dir()
         elif self.personality == 'scared':
-            self.direction = self.get_path_dir(self.target)
-            #self.direction = self.get_random_dir()
+            #self.direction = self.get_path_dir(self.target)
+            self.direction = self.get_random_dir()
 
     def get_path_dir(self, target):
         next_cell = self.find_next_cell_in_path(target)
         x_dir = next_cell[0] - self.grid_pos[0]
         y_dir = next_cell[1] - self.grid_pos[1]
         return vect(x_dir, y_dir)
+
+    def draw_short_path(self, shortest):
+        print("Path")
+        for cell in shortest:
+            print(str(cell[0]) + ":" + str(cell[1]), end=' ')
+            pygame.draw.rect(self.app.background, (177, 165, 84),
+                             (cell[0] * self.app.cell_width, cell[1] * self.app.cell_height,
+                              self.app.cell_width, self.app.cell_height), 0)
+        print()
 
     def find_next_cell_in_path(self, target):
         path = self.BFS([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
@@ -114,13 +136,14 @@ class Enemy:
                                     if next_cell not in queue:
                                         queue.append(next_cell)
                                     path.append({"Current": current, "Next": next_cell})
-        shortest = [target]
+        self.shortest = [target]
         while target != start:
             for step in path:
                 if step["Next"] == target:
                     target = step["Current"]
-                    shortest.insert(0, step["Current"])
-        return shortest
+                    self.shortest.insert(0, step["Current"])
+        # self.draw_short_path(sefshortest)
+        return self.shortest
 
     def get_random_dir(self):
         while True:
@@ -140,9 +163,14 @@ class Enemy:
         return vect(x_dir, y_dir)
 
     def get_pix_pos(self):
-        return vect((self.grid_pos.x*self.app.cell_width)+side//2+self.app.cell_width//2,
-                    (self.grid_pos.y*self.app.cell_height)+side//2 +
-                    self.app.cell_height//2)
+        return vect((self.grid_pos.x * self.app.cell_width) + side // 2 + self.app.cell_width // 2,
+                    (self.grid_pos.y * self.app.cell_height) + side // 2 +
+                    self.app.cell_height // 2)
+
+    def get_pix_pos2(self, grid_pos):
+        return vect((grid_pos[0] * self.app.cell_width) + side // 2 + self.app.cell_width // 2,
+                    (grid_pos[1] * self.app.cell_height) + side // 2 +
+                    self.app.cell_height // 2)
 
     def set_color(self):
         if self.number == 0:
