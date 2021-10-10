@@ -1,3 +1,5 @@
+import math
+
 from settings import *
 from player import *
 from enemy import *
@@ -20,6 +22,7 @@ class Application:
         self.coins = []
         self.enemies = []
         self.e_pos = []
+        self.grid = [[0 for x in range(cols)] for x in range(rows)]
         self.p_pos = vect(1, 1)
         self.wall_img = None
         self.load()
@@ -50,22 +53,105 @@ class Application:
         self.background = pygame.image.load('img/black1.jpg')
         self.background = pygame.transform.scale(self.background, (maze_width, maze_height))  ##
         self.wall_img = pygame.transform.scale(pygame.image.load('img/wall.png'), (self.cell_width, self.cell_height))
+        self.make_maze()
+        # with open('maze2.txt', 'r') as file:
+        #    for yidx, line in enumerate(file):
+        #        for xidx, char in enumerate(line):
+        #            if char == '1':
+        #                self.walls.append(vect(xidx, yidx))
+        #            elif char == 'c':
+        #                self.coins.append(vect(xidx, yidx))
+        #            elif char == 'p':
+        #                pl_start_pos = vect(xidx, yidx)
+        #            elif char in ['2', '3', '4', '5']:
+        #                self.e_pos.append(vect(xidx, yidx))
+        #            elif char == 'b':
+        #                pygame.draw.rect(self.background, (0, 0, 0, 0), (xidx * self.cell_width,
+        #                                                                 yidx * self.cell_height,
+        #                                                                 self.cell_width, self.cell_height))
+        # self.make_maze()
 
-        with open('maze.txt', 'r') as file:
-            for yidx, line in enumerate(file):
-                for xidx, char in enumerate(line):
-                    if char == '1':
-                        self.walls.append(vect(xidx, yidx))
-                    elif char == 'c':
-                        self.coins.append(vect(xidx, yidx))
-                    elif char == 'p':
-                        pl_start_pos = vect(xidx, yidx)
-                    elif char in ['2', '3', '4', '5']:
-                        self.e_pos.append(vect(xidx, yidx))
-                    elif char == 'b':
-                        pygame.draw.rect(self.background, (0, 0, 0, 0), (xidx * self.cell_width,
-                                                                         yidx * self.cell_height,
-                                                                         self.cell_width, self.cell_height))
+    def make_maze(self):
+        unvis_count = 0
+
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid[i])):
+                if i == 0 or j == 0 or i == len(self.grid) - 1 or j == len(self.grid[i]) - 1:
+                    self.grid[i][j] = 1
+                elif i % 2 == 1 and j % 2 == 1:
+                    self.grid[i][j] = 0
+                    unvis_count += 1
+                else:
+                    self.grid[i][j] = 1
+
+        visited = []
+        neighbours = []
+        stack = []
+
+        cur = pl_start_pos
+
+        while unvis_count:
+            visited.append(cur)
+
+            neighbours = self.get_neighbours(cur, visited)
+            if len(neighbours):
+                next = self.get_rand_neighbour(neighbours)
+                visited.append(next)
+                stack.append(cur)
+                self.remove_wall(cur, next, self.grid)
+                cur = next
+                unvis_count -= 1
+            elif len(stack):
+                cur = stack.pop()
+
+            if unvis_count == 1:
+                cent_place = [[-1, -1, -1, -1, -1, -1],
+                              [2, -1, -1, -1, -1, 3],
+                              [-1, -1, -1, -1, -1, -1],
+                              [4, -1, -1, -1, -1, 5]]
+                for i in range(len(cent_place)):
+                    for j in range(len(cent_place[i])):
+                        self.grid[i + 12][j + 11] = cent_place[i][j]
+                for i in range(len(self.grid)):
+                    if 0 < i < len(self.grid) - 2:
+                        self.grid[i][1] = 0
+                        self.grid[i][len(self.grid[i]) - 3] = 0
+                for j in range(len(self.grid[0])):
+                    if 0 < j < len(self.grid[0]) - 2:
+                        self.grid[1][j] = 0
+                        self.grid[len(self.grid)-3][j] = 0
+                break
+        self.grid[2][1] = 0
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid[i])):
+                if self.grid[i][j] == 1:
+                    self.walls.append(vect(j, i))
+                elif self.grid[i][j] == 0:
+                    self.coins.append(vect(j, i))
+                    self.grid[i][j] = 'c'
+                elif self.grid[i][j] == -1:
+                    self.grid[i][j] = 0
+                elif self.grid[i][j] in [2, 3, 4, 5]:
+                    self.e_pos.append(vect(j, i))
+
+    def get_neighbours(self, pos, visited):
+        neigh = [vect(pos.x, pos.y + 2), vect(pos.x, pos.y - 2), vect(pos.x + 2, pos.y), vect(pos.x - 2, pos.y)]
+        res = []
+        for el in neigh:
+            if el not in visited:
+                if 0 <= el.x < cols - 1 and 0 <= el.y < rows - 1:
+                    res.append(el)
+        return res
+
+    def get_rand_neighbour(self, neigh):
+        index = random.randint(0, len(neigh) - 1)
+        return neigh[index]
+
+    def remove_wall(self, cur, next, grid):
+        # ?
+        x = math.ceil((cur.x + next.x) / 2)
+        y = math.ceil((cur.y + next.y) / 2)
+        grid[y][x] = 0
 
     def draw_text(self, screen, size, color, name, text, pos, centered=False):
         font = pygame.font.SysFont(name, size)
@@ -101,11 +187,15 @@ class Application:
             enemy.pix_pos = enemy.get_pix_pos()
             enemy.direction *= 0
 
-        with open('maze.txt', 'r') as file:
-            for yidx, line in enumerate(file):
-                for xidx, char in enumerate(line):
-                    if char == 'c':
-                        self.coins.append(vect(xidx, yidx))
+        #with open('maze.txt', 'r') as file:
+        #    for yidx, line in enumerate(file):
+        #        for xidx, char in enumerate(line):
+        #            if char == 'c':
+        #                self.coins.append(vect(xidx, yidx))
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid[i])):
+                if self.grid[i][j] == 'c':
+                    self.coins.append(vect(j, i))
         self.state = 'playing'
 
     def start_events(self):

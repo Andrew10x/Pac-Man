@@ -40,11 +40,11 @@ class Enemy:
             if self.app.player.grid_pos.x > cols // 2 and self.app.player.grid_pos.y > rows // 2:
                 return vect(1, 1)
             if self.app.player.grid_pos.x > cols // 2 and self.app.player.grid_pos.y < rows // 2:
-                return vect(1, rows-2)
+                return vect(1, rows-3)
             if self.app.player.grid_pos.x < cols // 2 and self.app.player.grid_pos.y > rows // 2:
-                return vect(cols-2, 1)
+                return vect(cols-3, 1)
             else:
-                return vect(cols-2, rows-2)
+                return vect(cols-3, rows-3)
 
     def draw(self):
         #pygame.draw.circle(self.app.screen, self.color, self.pix_pos, self.radius)
@@ -70,10 +70,13 @@ class Enemy:
             self.direction = self.get_random_dir()
         elif self.personality == 'slow':
             self.direction = self.get_path_dir(self.target)
+            #self.direction = self.get_random_dir()
         elif self.personality == 'speedy':
             self.direction = self.get_path_dir(self.target)
+            #self.direction = self.get_random_dir()
         elif self.personality == 'scared':
             self.direction = self.get_path_dir(self.target)
+            #self.direction = self.get_random_dir()
 
     def get_path_dir(self, target):
         next_cell = self.find_next_cell_in_path(target)
@@ -108,7 +111,8 @@ class Enemy:
                             next_cell = [neighbour[0] + current[0], neighbour[1] + current[1]]
                             if next_cell not in visited:
                                 if grid[int(next_cell[1])][int(next_cell[0])] != 1:
-                                    queue.append(next_cell)
+                                    if next_cell not in queue:
+                                        queue.append(next_cell)
                                     path.append({"Current": current, "Next": next_cell})
         shortest = [target]
         while target != start:
