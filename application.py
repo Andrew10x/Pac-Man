@@ -28,6 +28,7 @@ class Application:
         self.load()
         self.player = Player(self, vect(pl_start_pos))
         self.make_enemies()
+        self.algorithm_number = 0
 
     def run(self):
         while self.running:
@@ -121,7 +122,7 @@ class Application:
                         self.grid[1][j] = 0
                         self.grid[len(self.grid)-3][j] = 0
                 break
-        self.grid[2][1] = 0
+        
         for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
                 if self.grid[i][j] == 1:
@@ -231,6 +232,8 @@ class Application:
                     self.player.move(vect(0, -1))
                 if ev.key == pygame.K_DOWN:
                     self.player.move(vect(0, 1))
+                if ev.key == pygame.K_z:
+                    self.algorithm_number += 1
 
     def playing_update(self):
         self.player.update()

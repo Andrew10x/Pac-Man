@@ -49,15 +49,16 @@ class Enemy:
                 return vect(cols - 3, rows - 3)
 
     def draw(self):
-        #pygame.draw.circle(self.app.screen, self.color, self.pix_pos, self.radius)
+        # pygame.draw.circle(self.app.screen, self.color, self.pix_pos, self.radius)
         self.app.screen.blit(self.image, (self.pix_pos.x - 12, self.pix_pos.y - 12))
 
         for cell in self.shortest:
-           if cell != self.shortest[0] and cell != self.shortest[len(self.shortest) - 1]:
-            pygame.draw.rect(self.app.screen,  self.color,
-                             (self.get_pix_pos2(cell).x - self.app.cell_width//2,  self.get_pix_pos2(cell).y - self.app.cell_height//2,
-                              self.app.cell_width, self.app.cell_height), 1)
-        #if self.shortest:
+            if cell != self.shortest[0] and cell != self.shortest[len(self.shortest) - 1]:
+                pygame.draw.rect(self.app.screen, self.color,
+                                 (self.get_pix_pos2(cell).x - self.app.cell_width // 2,
+                                  self.get_pix_pos2(cell).y - self.app.cell_height // 2,
+                                  self.app.cell_width, self.app.cell_height), 1)
+        # if self.shortest:
         #    pygame.draw.rect(self.app.background, (177, 165, 84),
         #                     (self.shortest[0][0] * self.app.cell_width, self.shortest[0][1] * self.app.cell_height,
         #                     self.app.cell_width, self.app.cell_height), 1)
@@ -88,7 +89,7 @@ class Enemy:
             self.direction = self.get_path_dir(self.target)
             # self.direction = self.get_random_dir()
         elif self.personality == 'scared':
-            #self.direction = self.get_path_dir(self.target)
+            # self.direction = self.get_path_dir(self.target)
             self.direction = self.get_random_dir()
 
     def get_path_dir(self, target):
@@ -97,25 +98,26 @@ class Enemy:
         y_dir = next_cell[1] - self.grid_pos[1]
         return vect(x_dir, y_dir)
 
-    def draw_short_path(self, shortest):
-        print("Path")
-        for cell in shortest:
-            print(str(cell[0]) + ":" + str(cell[1]), end=' ')
-            pygame.draw.rect(self.app.background, (177, 165, 84),
-                             (cell[0] * self.app.cell_width, cell[1] * self.app.cell_height,
-                              self.app.cell_width, self.app.cell_height), 0)
-        print()
+
+    def find_next_cell_in_path2(self, target):
+        # path = self.BFS([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
+        path = self.UCS([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
+        next_cell = path[1]
+        return next_cell
 
     def find_next_cell_in_path(self, target):
-        path = self.BFS([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
+        path = []
+        if self.app.algorithm_number % 3 == 0:
+            path = self.BFS([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
+        elif self.app.algorithm_number % 3 == 1:
+            path = self.make_DFS([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
+        elif self.app.algorithm_number % 3 == 2:
+            path = self.UCS([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
         next_cell = path[1]
         return next_cell
 
     def BFS(self, start, target):
-        grid = [[0 for x in range(28)] for x in range(30)]
-        for cell in self.app.walls:
-            if cell.x < 28 and cell.y < 30:
-                grid[int(cell.y)][int(cell.x)] = 1
+        grid = self.make_grid()
         queue = [start]
         path = []
         visited = []
@@ -136,6 +138,17 @@ class Enemy:
                                     if next_cell not in queue:
                                         queue.append(next_cell)
                                     path.append({"Current": current, "Next": next_cell})
+        return self.shortest_path(start, target, path)
+
+
+    def make_grid(self):
+        grid = [[0 for x in range(28)] for x in range(30)]
+        for cell in self.app.walls:
+            if cell.x < 28 and cell.y < 30:
+                grid[int(cell.y)][int(cell.x)] = 1
+        return grid
+
+    def shortest_path(self, start, target, path):
         self.shortest = [target]
         while target != start:
             for step in path:
@@ -144,6 +157,59 @@ class Enemy:
                     self.shortest.insert(0, step["Current"])
         # self.draw_short_path(sefshortest)
         return self.shortest
+
+
+    def UCS(self, start, target):
+        grid = self.make_grid()
+        queue = [[0, start]]
+        path = []
+        visited = []
+        key = 0
+        while queue:
+            key += 1
+            queue = sorted(queue)
+            current = queue[-1]
+            del queue[-1]
+            visited.append(current[1])
+            current[0] *= -1
+            if current[1] == target:
+                break
+            else:
+                neighbours = [[0, -1], [1, 0], [0, 1], [-1, 0]]
+                for neighbour in neighbours:
+                    if 0 <= neighbour[0] + current[1][0] < len(grid[0]):
+                        if 0 <= neighbour[1] + current[1][1] < len(grid):
+                            next_cell = [neighbour[0] + current[1][0], neighbour[1] + current[1][1]]
+                            if next_cell not in visited:
+                                if grid[int(next_cell[1])][int(next_cell[0])] != 1:
+                                    if [(current[0] + 1) * -1, next_cell] not in queue:
+                                        queue.append([(current[0] + 1) * -1, next_cell])
+                                    path.append({"Current": current[1], "Next": next_cell})
+        return self.shortest_path(start, target, path)
+
+    def make_DFS(self, start, target):
+        grid = self.make_grid()
+        visited = []
+        path = []
+        self.DFS(start, target, visited, path, grid, 0)
+        return self.shortest_path(start, target, path)
+
+    def DFS(self, current, target, visited, path, grid, k):
+        visited.append(current)
+        k += 1
+        if current == target:
+            return
+        neighbours = [[0, 1], [1, 0], [0, -1], [-1, 0]]
+        if k % 5 == 0:
+            random.shuffle(neighbours)
+        for neighbour in neighbours:
+            if 0 <= neighbour[0] + current[0] < len(grid[0]):
+                if 0 <= neighbour[1] + current[1] < len(grid):
+                    next_cell = [neighbour[0] + current[0], neighbour[1] + current[1]]
+                    if grid[int(next_cell[1])][int(next_cell[0])] != 1:
+                        if next_cell not in visited:
+                            path.append({"Current": current, "Next": next_cell})
+                            self.DFS(next_cell, target, visited, path, grid, k)
 
     def get_random_dir(self):
         while True:
@@ -188,9 +254,13 @@ class Enemy:
         elif self.number == 1:
             return "slow"
         elif self.number == 2:
-            return "random"
+            return "slow"
         elif self.number == 3:
-            return "scared"
+            return "speedy"
+        #elif self.number == 2:
+        #    return "random"
+        #elif self.number == 3:
+        #    return "scared"
 
     def load_img(self):
         if self.number == 0:
