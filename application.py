@@ -22,6 +22,7 @@ class Application:
         self.coins = []
         self.enemies = []
         self.e_pos = []
+        self.fruit = vect(25, 23)
         self.grid = [[0 for x in range(cols)] for x in range(rows)]
         self.p_pos = vect(1, 1)
         self.wall_img = None
@@ -120,9 +121,9 @@ class Application:
                 for j in range(len(self.grid[0])):
                     if 0 < j < len(self.grid[0]) - 2:
                         self.grid[1][j] = 0
-                        self.grid[len(self.grid)-3][j] = 0
+                        self.grid[len(self.grid) - 3][j] = 0
                 break
-        
+
         for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
                 if self.grid[i][j] == 1:
@@ -188,7 +189,7 @@ class Application:
             enemy.pix_pos = enemy.get_pix_pos()
             enemy.direction *= 0
 
-        #with open('maze.txt', 'r') as file:
+        # with open('maze.txt', 'r') as file:
         #    for yidx, line in enumerate(file):
         #        for xidx, char in enumerate(line):
         #            if char == 'c':
@@ -255,6 +256,11 @@ class Application:
         self.player.draw()
         for enemy in self.enemies:
             enemy.draw()
+
+        pygame.draw.circle(self.screen, (223, 17, 185),
+                           (self.fruit.x * self.cell_width + self.cell_width // 2 + side // 2,
+                            self.fruit.y * self.cell_height + self.cell_height // 2 + side // 2),
+                           self.cell_width // 2.4)
         pygame.display.update()
 
     def remove_life(self):
