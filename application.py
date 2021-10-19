@@ -1,4 +1,5 @@
 import math
+from random import randint
 
 from settings import *
 from player import *
@@ -22,7 +23,8 @@ class Application:
         self.coins = []
         self.enemies = []
         self.e_pos = []
-        self.fruit = vect(25, 23)
+        self.fruit = vect(1, 23)
+        self.cells = []
         self.grid = [[0 for x in range(cols)] for x in range(rows)]
         self.p_pos = vect(1, 1)
         self.wall_img = None
@@ -82,6 +84,7 @@ class Application:
                     self.grid[i][j] = 1
                 elif i % 2 == 1 and j % 2 == 1:
                     self.grid[i][j] = 0
+                    self.cells.append(vect(j, i))
                     unvis_count += 1
                 else:
                     self.grid[i][j] = 1
@@ -135,6 +138,10 @@ class Application:
                     self.grid[i][j] = 0
                 elif self.grid[i][j] in [2, 3, 4, 5]:
                     self.e_pos.append(vect(j, i))
+
+        pos = randint(0, len(self.cells) - 1)
+        self.fruit = self.cells[pos]
+        #self.fruit = vect(1,1)
 
     def get_neighbours(self, pos, visited):
         neigh = [vect(pos.x, pos.y + 2), vect(pos.x, pos.y - 2), vect(pos.x + 2, pos.y), vect(pos.x - 2, pos.y)]
@@ -257,10 +264,14 @@ class Application:
         for enemy in self.enemies:
             enemy.draw()
 
-        pygame.draw.circle(self.screen, (223, 17, 185),
-                           (self.fruit.x * self.cell_width + self.cell_width // 2 + side // 2,
-                            self.fruit.y * self.cell_height + self.cell_height // 2 + side // 2),
-                           self.cell_width // 2.4)
+        img = pygame.transform.scale(pygame.image.load('img/cherry.png'), (22, 22))
+        self.screen.blit(img, (self.fruit.x * self.cell_width + self.cell_width // 2 + side // 4,
+                               self.fruit.y * self.cell_height + self.cell_height // 2 + side // 4))
+
+        #pygame.draw.circle(self.screen, (223, 17, 185),
+        #                   (self.fruit.x * self.cell_width + self.cell_width // 2 + side // 2,
+        #                    self.fruit.y * self.cell_height + self.cell_height // 2 + side // 2),
+        #                   self.cell_width // 2.4)
         pygame.display.update()
 
     def remove_life(self):

@@ -1,3 +1,6 @@
+from heapq import *
+from random import randint
+
 import pygame
 from settings import *
 
@@ -18,8 +21,10 @@ class Player:
         self.walk_right = None
         self.walk_left = None
         self.walk_up = None
+        # self.fruit = vect(1, 23)
         self.walk_down = None
         self.anim_count = 0
+        self.shortest = []
 
         self.load()
         self.speed = 2
@@ -48,8 +53,10 @@ class Player:
         if self.able_to_move:
             self.pix_pos += self.direction * self.speed
         if self.time_to_move():
+            self.move()
             if self.stored_direction is not None:
                 self.direction = self.stored_direction
+
             self.able_to_move = self.can_move()
 
         self.grid_pos[0] = (self.pix_pos[0] - side +
@@ -60,9 +67,113 @@ class Player:
         if self.on_coin():
             self.eat_coin()
 
+        if self.on_friut():
+            self.eat_fruit()
+
+    def make_grid(self):
+        grid = [[0 for x in range(28)] for x in range(30)]
+        for cell in self.app.walls:
+            if cell.x < 28 and cell.y < 30:
+                grid[int(cell.y)][int(cell.x)] = 1
+        return grid
+
+    def shortest_path(self, start, target, path):
+        self.shortest = [target]
+        while target != start:
+            for step in path:
+                if step["Next"] == target:
+                    target = step["Current"]
+                    self.shortest.insert(0, step["Current"])
+        return self.shortest
+
+    def find_next_cell_in_path(self, target):
+        path = []
+
+        path = self.AStar3((self.grid_pos.x, self.grid_pos.y), (target.x, target.y))
+        #path = self.BFS((self.grid_pos.x, self.grid_pos.y), [target.x, target.y])
+        if len(path) >= 2:
+            next_cell = [path[1][0], path[1][1]]
+        else:
+            next_cell = [self.grid_pos[0], self.grid_pos[1]]
+        return next_cell
+
+    def move1(self):
+        self.direction = self.get_path_dir(self.app.fruit)
+
+    def get_path_dir(self, target):
+        next_cell = self.find_next_cell_in_path(target)
+        x_dir = next_cell[0] - self.grid_pos[0]
+        y_dir = next_cell[1] - self.grid_pos[1]
+        return vect(x_dir, y_dir)
+
+    def calc_h(self, cur, target):
+        return abs(cur[0] - target[0]) + abs(cur[1] - target[1])
+
+    def AStar3(self, start, target):
+        grid = self.make_grid()
+        start_cell = (start[0], start[1])
+        target_cell = (target[0], target[1])
+        queue = []
+        heappush(queue, (0, start_cell))
+        cost_visited = {start_cell: 0}
+        path = []
+        visited = []
+
+        while queue:
+            cur_prior, cur_cell = heappop(queue)
+            visited.append(cur_cell)
+
+            if cur_cell[0] == target[0] and cur_cell[1] == target[1]:
+                queue = []
+                continue
+            else:
+                neighbours = [[0, -1], [1, 0], [0, 1], [-1, 0]]
+                for neighbour in neighbours:
+                    if 0 <= neighbour[0] + cur_cell[0] < len(grid[0]):
+                        if 0 <= neighbour[1] + cur_cell[1] < len(grid):
+                            # next_cell = Cell(neighbour[0] + cur_cell.x, neighbour[1] + cur_cell.y,
+                            #                 cur_cell.g + 1, self.calc_h([neighbour[0] + cur_cell.x,
+                            #                                              neighbour[1] + cur_cell.y], target))
+                            next_cell = (neighbour[0] + cur_cell[0], neighbour[1] + cur_cell[1])
+                            new_cost = cost_visited[cur_cell] + 1
+                            if next_cell not in visited:
+                                if grid[int(next_cell[1])][int(next_cell[0])] != 1:
+                                    if next_cell not in cost_visited or cost_visited[next_cell] > new_cost:
+                                        priority = new_cost + self.calc_h(next_cell, target_cell)
+                                        # w1 = int(next_cell.g + next_cell.h)
+                                        heappush(queue, (int(priority), next_cell))
+                                        cost_visited[next_cell] = new_cost
+                                        path.append({"Current": cur_cell, "Next": next_cell})
+        
+        return self.shortest_path(start, target, path)
+
+    def BFS(self, start, target):
+        grid = self.make_grid()
+        queue = [start]
+        path = []
+        visited = []
+        while queue:
+            current = queue[0]
+            queue.remove(queue[0])
+            visited.append(current)
+            if current == target:
+                break
+            else:
+                neighbours = [[0, -1], [1, 0], [0, 1], [-1, 0]]
+                for neighbour in neighbours:
+                    if 0 <= neighbour[0] + current[0] < len(grid[0]):
+                        if 0 <= neighbour[1] + current[1] < len(grid):
+                            next_cell = [neighbour[0] + current[0], neighbour[1] + current[1]]
+                            if next_cell not in visited:
+                                if grid[int(next_cell[1])][int(next_cell[0])] != 1:
+                                    if next_cell not in queue:
+                                        queue.append(next_cell)
+                                    path.append({"Current": current, "Next": next_cell})
+        return self.shortest_path(start, target, path)
+
     def draw(self):
-        pac_x = int(self.pix_pos.x - self.app.cell_width//2)
-        pac_y = int(self.pix_pos.y - self.app.cell_height//2)
+        pac_x = int(self.pix_pos.x - self.app.cell_width // 2)
+        pac_y = int(self.pix_pos.y - self.app.cell_height // 2)
         pac_pos = vect(pac_x, pac_y)
         if self.direction == (0, -1):
             self.app.screen.blit(self.walk_up[self.anim_count // 14], pac_pos)
@@ -86,8 +197,26 @@ class Player:
         self.app.coins.remove(self.grid_pos)
         self.current_score += 1
 
-    def move(self, direction):
-        self.stored_direction = direction
+    def on_friut(self):
+        if self.grid_pos == self.app.fruit:
+            if self.time_to_move():
+                return True
+        else:
+            return False
+
+    def eat_fruit(self):
+        pos = randint(0, len(self.app.cells) - 1)
+        self.app.fruit = self.app.cells[pos]
+        self.current_score += 10
+
+    def move(self, dir=0):
+        if dir == 0:
+            self.stored_direction = self.get_path_dir(self.app.fruit)
+        else:
+            self.stored_direction = dir
+
+    # def move(self, dir):
+    #    self.stored_direction = dir
 
     def get_pix_pos(self):
         return vect((self.grid_pos[0] * self.app.cell_width) + side // 2 + self.app.cell_width // 2,

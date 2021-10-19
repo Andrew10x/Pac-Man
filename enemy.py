@@ -121,6 +121,8 @@ class Enemy:
 
     def get_path_dir(self, target):
         next_cell = self.find_next_cell_in_path(target)
+        if next_cell == self.grid_pos:
+            return self.get_random_dir()
         x_dir = next_cell[0] - self.grid_pos[0]
         y_dir = next_cell[1] - self.grid_pos[1]
         return vect(x_dir, y_dir)
@@ -134,14 +136,18 @@ class Enemy:
     def find_next_cell_in_path(self, target):
         path = []
         if self.app.algorithm_number % 3 == 0:
-            path = self.AStar3((self.grid_pos.x, self.grid_pos.y), (target.x, target.y))
-            #print(path)
+
+            path = self.BFS((self.grid_pos.x, self.grid_pos.y), [target.x, target.y])
+
         elif self.app.algorithm_number % 3 == 1:
             path = self.make_DFS([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
-            #print(path)
+
         elif self.app.algorithm_number % 3 == 2:
-            path = self.AStar3([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
-        next_cell = [path[1][0], path[1][1]]
+            path = self.BFS([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
+        if len(path) <= 25:
+            next_cell = [path[1][0], path[1][1]]
+        else:
+            next_cell = [self.grid_pos[0], self.grid_pos[1]]
         return next_cell
 
     def BFS(self, start, target):
@@ -503,7 +509,7 @@ class Enemy:
         if self.number == 0:
             return "speedy"
         elif self.number == 1:
-            return "speedy"
+            return "slow"
         elif self.number == 2:
             return "speedy"
         elif self.number == 3:
