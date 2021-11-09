@@ -110,8 +110,8 @@ class Enemy:
         if self.personality == 'random':
             self.direction = self.get_random_dir()
         elif self.personality == 'slow':
-            self.direction = self.get_path_dir(self.target)
-            #self.direction = self.get_random_dir()
+            #self.direction = self.get_path_dir(self.target)
+            self.direction = self.get_random_dir()
         elif self.personality == 'speedy':
             self.direction = self.get_path_dir(self.target)
             #self.direction = self.get_random_dir()
@@ -144,7 +144,7 @@ class Enemy:
 
         elif self.app.algorithm_number % 3 == 2:
             path = self.BFS([self.grid_pos.x, self.grid_pos.y], [target.x, target.y])
-        if len(path) <= 25:
+        if len(path) <= 100:
             next_cell = [path[1][0], path[1][1]]
         else:
             next_cell = [self.grid_pos[0], self.grid_pos[1]]
@@ -511,7 +511,7 @@ class Enemy:
         elif self.number == 1:
             return "slow"
         elif self.number == 2:
-            return "speedy"
+            return "slow"
         elif self.number == 3:
             return "slow"
         # elif self.number == 2:

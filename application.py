@@ -50,6 +50,8 @@ class Application:
             else:
                 self.running = False
             self.clock.tick(fps)
+
+
         pygame.quit()
         sys.exit()
 
@@ -141,7 +143,7 @@ class Application:
 
         pos = randint(0, len(self.cells) - 1)
         self.fruit = self.cells[pos]
-        #self.fruit = vect(1,1)
+        #self.fruit = vect(2, 1)
 
     def get_neighbours(self, pos, visited):
         neigh = [vect(pos.x, pos.y + 2), vect(pos.x, pos.y - 2), vect(pos.x + 2, pos.y), vect(pos.x - 2, pos.y)]

@@ -1,5 +1,6 @@
 from heapq import *
 from random import randint
+from minimax import *
 
 import pygame
 from settings import *
@@ -11,9 +12,12 @@ from settings import *
 class Player:
     def __init__(self, app, pos):
         self.app = app
+        self.target = self.app.fruit
+        self.grid = self.make_grid()
         self.starting_pos = [pos[0], pos[1]]
         self.grid_pos = vect(pos[0], pos[1])
         self.pix_pos = self.get_pix_pos()
+        self.root_node = None
         self.direction = vect(1, 0)
         self.stored_direction = None
         self.able_to_move = True
@@ -90,7 +94,7 @@ class Player:
         path = []
 
         path = self.AStar3((self.grid_pos.x, self.grid_pos.y), (target.x, target.y))
-        #path = self.BFS((self.grid_pos.x, self.grid_pos.y), [target.x, target.y])
+        # path = self.BFS((self.grid_pos.x, self.grid_pos.y), [target.x, target.y])
         if len(path) >= 2:
             next_cell = [path[1][0], path[1][1]]
         else:
@@ -100,11 +104,131 @@ class Player:
     def move1(self):
         self.direction = self.get_path_dir(self.app.fruit)
 
+    def minimax_move(self, matrix):
+        # current_coord = self.get_matrix_coordinates()
+        # if current_coord == self.target:
+        #     self.target = None
+        # if self.target is None:  # and self.time_counter % 50 == 0:
+        #self.set_new_target()
+        self.target = self.app.fruit
+        if self.target is not None:
+            state = GameState(matrix)
+            enemies_coords = state.get_enemies_positions()
+            if self.root_node is not None:
+                nodes = [item for sublist in
+                         list(map(lambda child: child.children, self.root_node.children))
+                         for item in sublist]
+                big_flag = False
+                for last_node in nodes:
+                    last_enemies_coords = last_node.state.get_enemies_positions()
+                    flag = True
+                    for enemies_coord in enemies_coords:
+                        if enemies_coord not in last_enemies_coords:
+                            flag = False
+                            break
+
+                    if flag:
+                        self.root_node = last_node
+                        new_grid = self.make_grid()
+                        new_grid[int(self.grid_pos[1])][int(self.grid_pos[0])] = 5
+                        for e_p in self.app.e_pos:
+                            self.grid[int(e_p[0])][int(e_p[1])] = 6
+
+                        generate_tree_recurs(last_node, 1, new_grid, self.target)
+                        print('FOUND')
+                        big_flag = True
+                        break
+                # if not big_flag:
+                self.root_node = generate_tree(state, self.target)
+            else:
+                self.root_node = generate_tree(state, self.target)
+            best_value = minimax(self.root_node, -math.inf, math.inf, 0)
+            #best_value = expectimax(self.root_node, 0)
+
+            pacman_position = self.grid_pos
+            for child in self.root_node.children:
+                if child.value == best_value:
+                    new_position = child.state.get_pacman_position()
+                    delta = (-pacman_position[0] + new_position[0],
+                             -pacman_position[1] + new_position[1])
+                    return delta
+                    #new_direction = self.vector_dict.get(delta)
+                    #if new_direction is not None:
+                    #    self.direction = new_direction
+                    #else:
+                    #    self.set_new_target()
+                    #break
+        self.move()
+
+    def minimax_move2(self, matrix):
+        self.target = self.app.fruit
+        if self.target is not None:
+            state = GameState(matrix)
+            enemies_coords = state.get_enemies_positions()
+            if self.root_node is not None:
+                nodes = [item for sublist in
+                         list(map(lambda child: child.children, self.root_node.children))
+                         for item in sublist]
+                big_flag = False
+                for last_node in nodes:
+                    last_enemies_coords = last_node.state.get_enemies_positions()
+                    flag = True
+                    for enemies_coord in enemies_coords:
+                        if enemies_coord not in last_enemies_coords:
+                            flag = False
+                            break
+
+                    if flag:
+                        self.root_node = last_node
+                        self.grid[int(self.grid_pos[0])][int(self.grid_pos[1])] = 2
+                        for e_p in self.app.e_pos:
+                            self.grid[int(e_p[0])][int(e_p[1])] = 3
+                        generate_tree_recurs(last_node, 1, self.grid, self.target)
+                        print('FOUND')
+                        big_flag = True
+                        break
+                # if not big_flag:
+                self.root_node = generate_tree(state, self.target)
+            else:
+                self.root_node = generate_tree(state, self.target)
+            best_value = minimax(self.root_node, -math.inf, math.inf, 0)
+            # best_value = expectimax(self.root_node, 0)
+
+            pacman_position = self.grid_pos
+            for child in self.root_node.children:
+                if child.value == best_value:
+                    new_position = child.state.get_pacman_position()
+                    delta = [-pacman_position[0] + new_position[0],
+                             -pacman_position[1] + new_position[1]]
+                    print(delta)
+                    return delta
+                    # new_direction = self.vector_dict.get(delta)
+                    # if new_direction is not None:
+                    #    self.direction = new_direction
+                    # else:
+                    #    self.set_new_target()
+                    # break
+        # self.move()
+
     def get_path_dir(self, target):
-        next_cell = self.find_next_cell_in_path(target)
-        x_dir = next_cell[0] - self.grid_pos[0]
-        y_dir = next_cell[1] - self.grid_pos[1]
-        return vect(x_dir, y_dir)
+        # next_cell = self.find_next_cell_in_path(target)
+        # x_dir = next_cell[0] - self.grid_pos[0]
+        # y_dir = next_cell[1] - self.grid_pos[1]
+        # return vect(x_dir, y_dir)
+        #self.grid[int(self.grid_pos[0])][int(self.grid_pos[1])] = 5
+        #self.grid[int(self.app.e_pos[0][0])][int(self.app.e_pos[0][1])] = 6
+        # for e_p in self.app.e_pos:
+        #    self.grid[int(e_p[0])][int(e_p[1])] = 6
+        #self.grid[int(self.app.e_pos[0][0])][int(self.app.e_pos[0][1])] = 6
+        new_grid = self.make_grid()
+        new_grid[int(self.grid_pos[1])][int(self.grid_pos[0])] = 5
+        new_grid[int(self.app.e_pos[0][1])][int(self.app.e_pos[0][0])] = 6
+        #for e_p in self.app.e_pos:
+        #  new_grid[int(e_p[0])][int(e_p[1])] = 6
+        #new_grid[int(self.app.e_pos[0][1])][int(self.app.e_pos[0][0])] = 6
+        dir = self.minimax_move(new_grid)
+        print(dir)
+        return vect(dir[0], dir[1])
 
     def calc_h(self, cur, target):
         return abs(cur[0] - target[0]) + abs(cur[1] - target[1])
@@ -144,7 +268,7 @@ class Player:
                                         heappush(queue, (int(priority), next_cell))
                                         cost_visited[next_cell] = new_cost
                                         path.append({"Current": cur_cell, "Next": next_cell})
-        
+
         return self.shortest_path(start, target, path)
 
     def BFS(self, start, target):
