@@ -13,7 +13,7 @@ class GameState:
         self.score = score
 
     def __str__(self) -> str:
-        return str(self.score)  # + ''.join([str(line)+"\n" for line in self.matrix]) \
+        return '\n'.join([str(line) for line in self.matrix]) \
 
     def get_pacman_position(self):
         for i in range(len(self.matrix)):
@@ -49,13 +49,11 @@ class Node:
         self.children: list[Node] = []
 
     def __str__(self) -> str:
-        output = str(self.state) + " " + str(self.value) + "\n"
-        output += "[\n"
-        for child in self.children:
-            output += " " + str(child)
-
-        output += "]\n"
+        output = str(self.state) + " \nValue: " + str(self.value) + "\n"
+        strings = '\n'.join(map(lambda x: '\n'.join(map(lambda y: " " + y, str(x).split('\n'))), self.children))
+        output += '{\n' + strings + '}\n' if strings != '' else ''
         return output
+
 
     def count(self, counter):
         counter += 1
@@ -79,22 +77,22 @@ def evaluate(node: Node, target: tuple[int, int]):
         if delta is None or delta > distance:
             delta = distance
 
-    # delta = len(dfs(node.state.matrix, pacman_coord, target))
-    target_distance = len(BFS2(node.state.matrix, pacman_coord, target))
-    output = -(target_distance)
+    #delta = len(dfs(node.state.matrix, pacman_coord, target))
+    target_distance = len(a_star(node.state.matrix, pacman_coord, target))
+    output = -(target_distance - 0.2*delta)
 
 
     return output
 
 
-def generate_tree(start_state: GameState, target):
+def genTree(start_state: GameState, target):
     start_node = Node(start_state, None)
     generate_tree_recurs(start_node, 1, start_state.matrix, target)
     return start_node
 
 
 def generate_tree_recurs(curr_node: Node, depth, start_matrix, target):
-    if depth > 3:
+    if depth > 2:
         curr_node.value = evaluate(curr_node, target)
         return None
     curr_state = curr_node.state
